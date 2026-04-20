@@ -99,6 +99,7 @@ if [ \$1 -eq 0 ]; then
 fi
 
 %files
+%license LICENSE.md
 /usr/share/plasma/plasmoids/org.kde.plasma.battery/metadata.json
 /usr/share/plasma/plasmoids/org.kde.plasma.battery/contents/ui/main.qml
 /usr/share/plasma/plasmoids/org.kde.plasma.battery/contents/ui/CompactRepresentation.qml
