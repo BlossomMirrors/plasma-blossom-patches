@@ -1,0 +1,198 @@
+diff --git a/applets/batterymonitor/BadgeOverlay.qml b/applets/batterymonitor/BadgeOverlay.qml
+new file mode 100644
+index 0000000..fae9384
+--- /dev/null
++++ b/applets/batterymonitor/BadgeOverlay.qml
+@@ -0,0 +1,32 @@
++/*
++    SPDX-FileCopyrightText: 2016 Kai Uwe Broulik <kde@broulik.de>
++    SPDX-FileCopyrightText: 2016 Marco Martin <mart@kde.org>
++
++    SPDX-License-Identifier: GPL-2.0-or-later
++*/
++
++import QtQuick
++import org.kde.kirigami as Kirigami
++
++Item {
++    property Item icon  // unused
++    property string text
++
++    implicitWidth: label.implicitWidth + Kirigami.Units.smallSpacing * 2
++    implicitHeight: label.implicitHeight + Kirigami.Units.smallSpacing
++
++    Rectangle {
++        anchors.fill: parent
++        radius: height / 2
++        color: Qt.alpha(Kirigami.Theme.backgroundColor, 0.9)
++    }
++
++    Text {
++        id: label
++        anchors.centerIn: parent
++        text: parent.text
++        font.bold: false
++        font.pixelSize: 9
++        color: Kirigami.Theme.textColor
++    }
++}
+diff --git a/applets/batterymonitor/BatteryIcon.qml b/applets/batterymonitor/BatteryIcon.qml
+new file mode 100644
+index 0000000..85c18f3
+--- /dev/null
++++ b/applets/batterymonitor/BatteryIcon.qml
+@@ -0,0 +1,75 @@
++/*
++    SPDX-FileCopyrightText: 2011 Viranch Mehta <viranch.mehta@gmail.com>
++    SPDX-FileCopyrightText: 2013 Kai Uwe Broulik <kde@privat.broulik.de>
++
++    SPDX-License-Identifier: LGPL-2.0-or-later
++*/
++
++import QtQuick
++
++import org.kde.kirigami as Kirigami
++
++Item {
++    id: root
++
++    property bool hasBattery
++    property int percent
++    property bool pluggedIn
++    property string batteryType
++    property bool active: false
++    property string powerProfileIconName: ""
++    property bool preferSymbolic: false
++
++    readonly property string _c: pluggedIn ? "-charging" : ""
++    readonly property string _p: (powerProfileIconName !== "" && !pluggedIn) ? "-profile-" + powerProfileIconName : ""
++    readonly property string _s: preferSymbolic ? "-symbolic" : ""
++    readonly property int _pct5:  Math.max(0, Math.min(100, Math.round(percent / 5)  * 5))
++    readonly property int _pct10: Math.max(0, Math.min(100, Math.round(percent / 10) * 10))
++
++    Kirigami.Icon {
++        anchors.fill: parent
++        source: "battery-missing" + root._s
++        visible: !root.hasBattery && !otherBatteriesIcon.visible
++        active: root.active
++    }
++
++    Kirigami.Icon {
++        anchors.fill: parent
++        visible: root.hasBattery && !otherBatteriesIcon.visible
++        source: "battery-" + String(root._pct5).padStart(3, "0") + root._c + root._p + root._s
++        fallback: "battery-level-" + root._pct10 + root._c + root._p + root._s
++        active: root.active
++    }
++
++    Kirigami.Icon {
++        id: otherBatteriesIcon
++        anchors.fill: parent
++        source: elementForType(root.batteryType) + root._s
++        visible: elementForType(root.batteryType) !== ""
++        active: root.active
++
++        function elementForType(t: string): string {
++            switch (t) {
++            case "Mouse":
++                return "input-mouse-battery";
++            case "Keyboard":
++                return "input-keyboard-battery";
++            case "Pda":
++                return "phone-battery";
++            case "Phone":
++                return "phone-battery";
++            case "Ups":
++                return "battery-ups";
++            case "GamingInput":
++                return "input-gaming-battery";
++            case "Bluetooth":
++                return "preferences-system-bluetooth-battery";
++            case "Headphone":
++                return "audio-headphones-battery";
++            case "Headset":
++                return "audio-headset-battery";
++            default:
++                return "";
++            }
++        }
++    }
++}
+diff --git a/applets/batterymonitor/CMakeLists.txt b/applets/batterymonitor/CMakeLists.txt
+index 28e52d2..1b102ab 100644
+--- a/applets/batterymonitor/CMakeLists.txt
++++ b/applets/batterymonitor/CMakeLists.txt
+@@ -8,6 +8,8 @@ ecm_qt_install_logging_categories(
+ 
+ plasma_add_applet(org.kde.plasma.battery
+     QML_SOURCES
++        BadgeOverlay.qml
++        BatteryIcon.qml
+         BatteryItem.qml
+         CompactRepresentation.qml
+         InhibitionHint.qml
+diff --git a/applets/batterymonitor/CompactRepresentation.qml b/applets/batterymonitor/CompactRepresentation.qml
+index 23e6272..4203bc7 100644
+--- a/applets/batterymonitor/CompactRepresentation.qml
++++ b/applets/batterymonitor/CompactRepresentation.qml
+@@ -12,7 +12,6 @@ import QtQuick.Layouts
+ 
+ import org.kde.plasma.plasmoid
+ import org.kde.plasma.core as PlasmaCore
+-import org.kde.plasma.workspace.components as WorkspaceComponents
+ import org.kde.kirigami as Kirigami
+ 
+ import org.kde.plasma.private.battery
+@@ -20,6 +19,8 @@ import org.kde.plasma.private.battery
+ MouseArea {
+     id: root
+ 
++    Layout.preferredWidth: height
++
+     readonly property bool isConstrained: [PlasmaCore.Types.Vertical, PlasmaCore.Types.Horizontal].includes(Plasmoid.formFactor)
+         || Plasmoid.containmentDisplayHints & PlasmaCore.Types.ContainmentForcesSquarePlasmoids
+     property int batteryPercent: 0
+@@ -76,7 +77,7 @@ MouseArea {
+         visible: root.isConstrained && !powerModeIcon.visible && root.hasInternalBatteries
+ 
+         // Show normal battery icon
+-        WorkspaceComponents.BatteryIcon {
++        BatteryIcon {
+             id: overallBatteryIcon
+ 
+             anchors.fill: parent
+@@ -85,6 +86,7 @@ MouseArea {
+             hasBattery: root.hasCumulative
+             percent: root.batteryPercent
+             pluggedIn: root.batteryPluggedIn
++            preferSymbolic: true
+             powerProfileIconName: root.isInDefaultPowerProfile ? ""
+                                 : root.isInPowersaveProfile    ? "powersave"
+                                 : root.isInBalancedProfile     ? "balanced"
+@@ -92,7 +94,7 @@ MouseArea {
+                                 : ""
+         }
+ 
+-        WorkspaceComponents.BadgeOverlay {
++        BadgeOverlay {
+             anchors.bottom: parent.bottom
+             anchors.right: parent.right
+ 
+@@ -130,7 +132,7 @@ MouseArea {
+             height: view.cellHeight
+ 
+             // Show normal battery icon
+-            WorkspaceComponents.BatteryIcon {
++            BatteryIcon {
+                 id: batteryIcon
+ 
+                 anchors.fill: parent
+@@ -141,7 +143,7 @@ MouseArea {
+                 pluggedIn: ChargeState === BatteryControlModel.Charging
+             }
+ 
+-            WorkspaceComponents.BadgeOverlay {
++            BadgeOverlay {
+                 anchors.bottom: parent.bottom
+                 anchors.right: parent.right
+

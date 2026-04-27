@@ -1,0 +1,11 @@
+--- a/shell/shellcorona.h
++++ b/shell/shellcorona.h
+@@ -190,7 +190,7 @@
+     void setDashboardShown(bool show);
+     void toggleActivityManager();
+     void toggleWidgetExplorer();
+-    QString evaluateScript(const QString &string);
++    Q_INVOKABLE QString evaluateScript(const QString &string);
+     void setWallpaper(const QString &wallpaperPlugin, const QVariantMap &parameters, uint screenNum = 0);
+     void activateLauncherMenu();
+     QRgb color() const;

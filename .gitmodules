@@ -1,0 +1,6 @@
+[submodule "upstream/powerdevil"]
+	path = upstream/powerdevil
+	url = https://invent.kde.org/plasma/powerdevil.git
+[submodule "upstream/plasma-workspace"]
+	path = upstream/plasma-workspace
+	url = https://invent.kde.org/plasma/plasma-workspace.git

@@ -1,0 +1,73 @@
+--- a/applets/systemtray/systemtraysettings.h	2026-04-26 19:47:09.749317705 +0200
++++ b/applets/systemtray/systemtraysettings.h	2026-04-26 19:47:09.760778464 +0200
+@@ -36,6 +36,7 @@
+     bool isShowAllItems() const;
+     const QStringList shownItems() const;
+     const QStringList hiddenItems() const;
++    void addHiddenItem(const QString &itemId);
+ 
+     void cleanupPlugin(const QString &pluginId);
+ 
+--- a/applets/systemtray/systemtraysettings.cpp	2026-04-26 19:47:09.751446744 +0200
++++ b/applets/systemtray/systemtraysettings.cpp	2026-04-26 19:47:09.763094693 +0200
+@@ -96,6 +96,15 @@
+     return config->property(HIDDEN_ITEMS_KEY).toStringList();
+ }
+ 
++void SystemTraySettings::addHiddenItem(const QString &itemId)
++{
++    QStringList hidden = hiddenItems();
++    if (!hidden.contains(itemId)) {
++        hidden << itemId;
++        writeConfigValue(HIDDEN_ITEMS_KEY, hidden);
++    }
++}
++
+ void SystemTraySettings::cleanupPlugin(const QString &pluginId)
+ {
+     removeKnownPlugin(pluginId);
+--- a/applets/systemtray/systemtraymodel.h	2026-04-26 19:47:09.753281831 +0200
++++ b/applets/systemtray/systemtraymodel.h	2026-04-26 19:47:16.647016732 +0200
+@@ -51,10 +51,9 @@
+ 
+ protected:
+     Plasma::Types::ItemStatus calculateEffectiveStatus(bool canRender, Plasma::Types::ItemStatus status, QString itemId) const;
+-
+-private:
+     QPointer<SystemTraySettings> m_settings;
+ 
++private:
+     bool m_showAllItems;
+     QStringList m_shownItems;
+     QStringList m_hiddenItems;
+--- a/applets/systemtray/systemtraymodel.cpp	2026-04-26 19:47:09.755479323 +0200
++++ b/applets/systemtray/systemtraymodel.cpp	2026-04-26 20:37:09.998667184 +0200
+@@ -413,6 +413,28 @@
+     });
+     m_items.append(source);
+     endInsertRows();
++    // Must be after endInsertRows — addHiddenItem emits dataChanged.
++    if (m_settings && sni) {
++        const QString idNow = extractItemId(sni);
++        if (!idNow.isEmpty()) {
++            if (!m_settings->shownItems().contains(idNow) && !m_settings->hiddenItems().contains(idNow)) {
++                m_settings->addHiddenItem(idNow);
++            }
++        } else {
++            // id() is empty until D-Bus GetAll completes; syncStatus fires first.
++            QPointer<StatusNotifierItemSource> sniPtr(sni);
++            QTimer::singleShot(500, this, [this, sniPtr]() {
++                if (!m_settings || !sniPtr) {
++                    return;
++                }
++                const QString itemId = extractItemId(sniPtr);
++                if (itemId.isEmpty() || m_settings->shownItems().contains(itemId) || m_settings->hiddenItems().contains(itemId)) {
++                    return;
++                }
++                m_settings->addHiddenItem(itemId);
++            });
++        }
++    }
+ }
+ 
+ void StatusNotifierModel::removeSource(const QString &source)

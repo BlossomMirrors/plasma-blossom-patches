@@ -1,0 +1,41 @@
+commit c30e64f86dfda157a1174e1f304827f370e3830a
+Author: p <p@l>
+Date:   Sun Apr 26 18:32:55 2026 +0200
+
+    arrow-left
+
+diff --git a/applets/systemtray/qml/main.qml b/applets/systemtray/qml/main.qml
+index c07bb43..994063f 100644
+--- a/applets/systemtray/qml/main.qml
++++ b/applets/systemtray/qml/main.qml
+@@ -173,6 +173,15 @@ ContainmentItem {
+ 
+             flow: root.vertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
+ 
++            ExpanderArrow {
++                id: expander
++                Layout.fillWidth: vertical
++                Layout.fillHeight: !vertical
++                Layout.alignment: vertical ? Qt.AlignVCenter : Qt.AlignHCenter
++                iconSize: tasksGrid.itemSize
++                visible: root.hiddenLayout.itemCount > 0
++            }
++
+             GridView {
+                 id: tasksGrid
+ 
+@@ -248,14 +257,6 @@ ContainmentItem {
+                 }
+             }
+ 
+-            ExpanderArrow {
+-                id: expander
+-                Layout.fillWidth: vertical
+-                Layout.fillHeight: !vertical
+-                Layout.alignment: vertical ? Qt.AlignVCenter : Qt.AlignHCenter
+-                iconSize: tasksGrid.itemSize
+-                visible: root.hiddenLayout.itemCount > 0
+-            }
+         }
+ 
+         Timer {
