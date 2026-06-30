@@ -9,10 +9,18 @@ if [[ "${1:-}" == "--rollback" ]]; then
     exit 0
 fi
 
+sudo rpm-ostree unlock --hotfix | true || true
+
+sudo dnf install -y 'dnf-command(builddep)'
+sudo dnf builddep -y plasma-workspace
+sudo dnf builddep -y powerdevil
+
 python3 "$SCRIPT_DIR/release.py" --batch
 
 RPM=$(ls -t "$SCRIPT_DIR/release/"plasma-patches-blossom-*.rpm 2>/dev/null | head -1)
 [[ -z "$RPM" ]] && { echo "No RPM found in release/"; exit 1; }
 sudo rpm -Uvh --force "$RPM"
+
+systemctl --user restart plasma-plasmashell
 
 echo "Done. To undo: bash $SCRIPT_DIR/install.sh --rollback"

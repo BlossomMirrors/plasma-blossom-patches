@@ -19,6 +19,8 @@ BIN_FILES = {
     "org.kde.plasma.systemtray.so": "/usr/lib64/qt6/plugins/plasma/applets/org.kde.plasma.systemtray.so",
     "plasmashell":                  "/usr/bin/plasmashell",
     "patch_config.py":              "/usr/lib/plasma-patches-blossom/patch_config.py",
+    "org.kde.plasma.digitalclock.so": "/usr/lib64/qt6/plugins/plasma/applets/org.kde.plasma.digitalclock.so",
+    "libdigitalclockplugin.so":       "/usr/lib64/qt6/qml/org/kde/plasma/private/digitalclock/libdigitalclockplugin.so",
 }
 
 # Installed with mode 644
@@ -50,6 +52,9 @@ def main():
 
     if version != current_version:
         version_file.write_text(version + "\n")
+
+    print("Initialising submodules …")
+    run(["git", "submodule", "update", "--init", "--depth", "1"], cwd=SCRIPT_DIR)
 
     run([sys.executable, str(SCRIPT_DIR / "build.py")])
 
@@ -113,6 +118,8 @@ Patched KDE Plasma applet plugins for BlossomOS:
 {install_lines}
 
 %post
+rm -f /usr/share/plasma/avatars/*Konq*.png /usr/share/plasma/avatars/Katie.png
+
 REAL_USER="${{SUDO_USER:-$(logname 2>/dev/null || true)}}"
 if [ -n "$REAL_USER" ] && [ "$REAL_USER" != "root" ]; then
     RUID=$(id -u "$REAL_USER")

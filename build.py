@@ -26,6 +26,21 @@ TARGETS = {
                 "glob": "bin/plasmashell",
                 "out_name": "plasmashell",
             },
+            {
+                "cmake_target": "org.kde.plasma.digitalclock",
+                "glob": "*digitalclock.so",
+                "out_name": "org.kde.plasma.digitalclock.so",
+            },
+            {
+                "cmake_target": "digitalclockplugin",
+                "glob": "*digitalclockplugin*.so",
+                "out_name": "libdigitalclockplugin.so",
+            },
+            {
+                "cmake_target": "kworkspace",
+                "glob": "*kworkspace*.so",
+                "out_name": None,  # internal dep for powerdevil configure
+            },
         ],
     },
     "powerdevil": {
@@ -81,7 +96,7 @@ def apply_patches(src_copy: Path, patches_dir: Path):
 
 def build_target(name: str, t: dict, force: bool):
     outputs = t["outputs"]
-    out_files = [OUT_DIR / o["out_name"] for o in outputs]
+    out_files = [OUT_DIR / o["out_name"] for o in outputs if o["out_name"]]
 
     if all(f.is_file() for f in out_files) and not force:
         print(f"[{name}] already built — skipping (use --force to rebuild)")
@@ -100,17 +115,22 @@ def build_target(name: str, t: dict, force: bool):
 
     print(f"[{name}] configuring …")
     work_build.mkdir(parents=True, exist_ok=True)
-    run([
+    sibling_builds = [str(d) for d in BUILD_ROOT.iterdir() if d.is_dir() and d.name.endswith("-build") and d != work_build]
+    cmake_prefix = ";".join(sibling_builds) if sibling_builds else ""
+    cmake_cmd = [
         "cmake", str(work_src),
         "-DCMAKE_BUILD_TYPE=Release",
         "-DBUILD_TESTING=OFF",
         "-DCMAKE_SKIP_INSTALL_RULES=ON",
-    ], cwd=work_build)
+    ]
+    if cmake_prefix:
+        cmake_cmd.append(f"-DCMAKE_PREFIX_PATH={cmake_prefix}")
+    run(cmake_cmd, cwd=work_build)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     for output in outputs:
-        out_file = OUT_DIR / output["out_name"]
-        if out_file.is_file() and not force:
+        out_file = OUT_DIR / output["out_name"] if output["out_name"] else None
+        if out_file and out_file.is_file() and not force:
             print(f"[{name}] {output['out_name']} already built — skipping")
             continue
         print(f"[{name}] building {output['cmake_target']} …")
@@ -119,7 +139,9 @@ def build_target(name: str, t: dict, force: bool):
             "--target", output["cmake_target"],
             "-j", str(os.cpu_count() or 4),
         ], cwd=work_build)
-        built = next(BUILD_ROOT.rglob(output["glob"]), None)
+        if out_file is None:
+            continue
+        built = next(work_build.rglob(output["glob"]), None)
         if built is None:
             sys.exit(f"[{name}] {output['out_name']} not found after build")
         shutil.copy2(built, out_file)

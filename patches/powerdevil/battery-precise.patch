@@ -41,7 +41,7 @@ new file mode 100644
 index 0000000..85c18f3
 --- /dev/null
 +++ b/applets/batterymonitor/BatteryIcon.qml
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,76 @@
 +/*
 +    SPDX-FileCopyrightText: 2011 Viranch Mehta <viranch.mehta@gmail.com>
 +    SPDX-FileCopyrightText: 2013 Kai Uwe Broulik <kde@privat.broulik.de>

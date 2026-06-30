@@ -1,0 +1,12 @@
+--- a/applets/batterymonitor/main.qml	2026-06-30 01:56:16.879631435 +0200
++++ b/applets/batterymonitor/main.qml	2026-06-30 01:56:26.716326479 +0200
+@@ -100,6 +100,9 @@
+     LayoutMirroring.childrenInherit: true
+ 
+     Plasmoid.status: {
++        if (!batteryControl.hasBatteries) {
++            return PlasmaCore.Types.HiddenStatus;
++        }
+         if (inhibitionControl.isManuallyInhibited || !powerProfilesControl.isInDefaultPowerProfile) {
+             return PlasmaCore.Types.ActiveStatus;
+         }

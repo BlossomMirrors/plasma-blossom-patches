@@ -1,0 +1,104 @@
+--- a/applets/digital-clock/DigitalClock.qml
++++ b/applets/digital-clock/DigitalClock.qml
+@@ -146,7 +146,7 @@
+                 main.Layout.minimumWidth: contentItem.width
+                 main.Layout.maximumWidth: main.Layout.minimumWidth
+ 
+-                contentItem.height: timeLabel.height + (contentItem.Plasmoid.configuration.showDate || timeZoneLabel.visible ? 0.8 * timeLabel.height : 0)
++                contentItem.height: timeLabel.height + (contentItem.Plasmoid.configuration.showDate || timeZoneLabel.visible ? 0.65 * timeLabel.height : 0)
+                 contentItem.width: Math.max(timeLabel.width + (contentItem.Plasmoid.configuration.showDate ? timeZoneLabel.paintedWidth : 0),
+                                 timeZoneLabel.paintedWidth, dateLabel.paintedWidth) + Kirigami.Units.largeSpacing
+ 
+@@ -160,7 +160,7 @@
+                 timeZoneLabel.width: timeZoneLabel.Plasmoid.configuration.showDate ? timeZoneLabel.paintedWidth : timeLabel.width
+                 timeZoneLabel.font.pixelSize: timeZoneLabel.height
+ 
+-                dateLabel.height: 0.8 * timeLabel.height
++                dateLabel.height: 0.65 * timeLabel.height
+                 dateLabel.width: dateLabel.paintedWidth
+                 dateLabel.verticalAlignment: Text.AlignVCenter
+                 dateLabel.font.pixelSize: dateLabel.height
+@@ -172,7 +172,7 @@
+                  * the time label is slightly larger than the date or time zone label
+                  * and still fits well into the panel with all the applied margins.
+                  */
+-                sizehelper.height: Math.min(timeZoneLabel.Plasmoid.configuration.showDate || timeZoneLabel.visible ? main.height * 0.56 : main.height * 0.71,
++                sizehelper.height: Math.min(timeZoneLabel.Plasmoid.configuration.showDate || timeZoneLabel.visible ? main.height * 0.46 : main.height * 0.58,
+                                             fontHelper.font.pixelSize)
+ 
+                 sizehelper.font.pixelSize: sizehelper.height
+@@ -181,14 +181,14 @@
+             AnchorChanges {
+                 target: labelsGrid
+ 
+-                anchors.horizontalCenter: contentItem.horizontalCenter
++                anchors.right: contentItem.right
+             }
+ 
+             AnchorChanges {
+                 target: dateLabel
+ 
+                 anchors.top: labelsGrid.bottom
+-                anchors.horizontalCenter: labelsGrid.horizontalCenter
++                anchors.right: labelsGrid.right
+             }
+         },
+ 
+@@ -391,12 +391,13 @@
+     Item {
+         id: contentItem
+         anchors.verticalCenter: main.verticalCenter
++        anchors.right: main.right
+ 
+         Grid {
+             id: labelsGrid
+ 
+             rows: 1
+-            horizontalItemAlignment: Grid.AlignHCenter
++            horizontalItemAlignment: Grid.AlignRight
+             verticalItemAlignment: Grid.AlignVCenter
+ 
+             flow: Grid.TopToBottom
+@@ -409,7 +410,7 @@
+ 
+                 font {
+                     family: fontHelper.font.family
+-                    weight: fontHelper.font.weight
++                    weight: Font.DemiBold
+                     italic: fontHelper.font.italic
+                     features: { "tnum": 1 }
+                     pixelSize: 1024
+@@ -420,7 +421,7 @@
+                 textFormat: Text.PlainText
+ 
+                 verticalAlignment: Text.AlignVCenter
+-                horizontalAlignment: Text.AlignHCenter
++                horizontalAlignment: Text.AlignRight
+             }
+ 
+             PlasmaComponents.Label {
+@@ -432,7 +433,7 @@
+                 minimumPixelSize: 1
+ 
+                 visible: text.length > 0
+-                horizontalAlignment: Text.AlignHCenter
++                horizontalAlignment: Text.AlignRight
+                 verticalAlignment: Text.AlignVCenter
+                 textFormat: Text.PlainText
+             }
+@@ -444,12 +445,13 @@
+             visible: Plasmoid.configuration.showDate
+ 
+             font.family: timeLabel.font.family
+-            font.weight: timeLabel.font.weight
++            font.weight: fontHelper.font.weight
+             font.italic: timeLabel.font.italic
+             font.pixelSize: 1024
+             minimumPixelSize: 1
++            opacity: 0.6
+ 
+-            horizontalAlignment: Text.AlignHCenter
++            horizontalAlignment: Text.AlignRight
+             verticalAlignment: Text.AlignVCenter
+             textFormat: Text.PlainText
+         }
